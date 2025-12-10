@@ -15,7 +15,6 @@ This project uses the **[ASL Alphabet](https://www.kaggle.com/datasets/grassknot
 
 ## How to run
 
-### 1. Clone the repository
 ```bash
 git clone https://github.com/sofa797/asl_gesture_trainer.git
 cd asl_gesture_trainer
