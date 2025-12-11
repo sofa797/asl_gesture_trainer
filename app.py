@@ -5,11 +5,9 @@ import tensorflow as tf
 from utils import detect_skin, FaceMasker, enhance_hand_roi
 
 app = Flask(__name__)
-
 MODEL_PATH = 'asl_model.h5'
 class_names = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
 model = tf.keras.models.load_model(MODEL_PATH)
-
 face_masker = FaceMasker()
 cap = cv2.VideoCapture(0)
 
@@ -20,11 +18,9 @@ cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 cap.set(cv2.CAP_PROP_FPS, 30)
 cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
-
 current_target = 'A'
 last_verdict = None
 mask_faces = True
-
 
 def generate_frames():
     global current_target, last_verdict, mask_faces
@@ -45,7 +41,6 @@ def generate_frames():
 
         skin_percentage, contours, _ = detect_skin(processing_frame)
         hand_detected = skin_percentage > 0.03
-
         gesture = "nothing"
         confidence = 0.0
 
@@ -92,8 +87,7 @@ def generate_frames():
         elif not hand_detected:
             last_verdict = None
 
-        cv2.putText(display_frame, f"letter: {current_target}", (20, 50),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 255, 255), 2)
+        cv2.putText(display_frame, f"letter: {current_target}", (20, 50),cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 255, 255), 2)
 
         if last_verdict == 'correct':
             status = "correct"
@@ -147,14 +141,12 @@ def toggle_mask():
 
 @app.route('/gesture_image/<letter>')
 def gesture_image(letter):
-    """Возвращает URL изображения жеста для буквы"""
     if letter.upper() in class_names:
         return {"url": url_for('static', filename=f'gestures/{letter.upper()}.jpg')}
     return {"url": url_for('static', filename='gestures/placeholder.jpg')}
 
 @app.route('/learning')
 def learning_page():
-    """Отдаёт страницу обучения со всеми буквами"""
     return render_template('learning.html', letters=class_names)
 
 if __name__ == '__main__':
