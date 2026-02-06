@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  asl-trainer:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    devices:
+      - /dev/video0:/dev/video0
+    privileged: true
+    stdin_open: true
+    tty: true

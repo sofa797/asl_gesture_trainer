@@ -18,5 +18,4 @@ This project uses the **[ASL Alphabet](https://www.kaggle.com/datasets/grassknot
 ```bash
 git clone https://github.com/sofa797/asl_gesture_trainer.git
 cd asl_gesture_trainer
-pip install -r requirements.txt
-python app.py
+docker-compose up --build
