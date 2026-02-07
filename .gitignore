@@ -1,2 +1,12 @@
+venv/
+.venv/
+env/
+ENV/
+
 __pycache__/
 *.pyc
+*.pyd
+*.pyo
+*$py.class
+
+.pytest_cache/
