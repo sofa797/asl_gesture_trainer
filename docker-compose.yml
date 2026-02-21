@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   asl-trainer:
     build: .
@@ -15,3 +13,4 @@ services:
     privileged: true
     stdin_open: true
     tty: true
+    restart: unless-stopped

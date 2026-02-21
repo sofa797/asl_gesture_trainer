@@ -2,41 +2,43 @@ from flask import Flask, render_template, Response, jsonify, url_for
 import cv2
 import numpy as np
 import os
+import keras
 
 app = Flask(__name__)
 MODEL_PATH = 'asl_model.h5'
 class_names = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
 
+class DummyModel:
+    def predict(self, X, verbose=None):
+        batch_size = X.shape[0]
+        predictions = np.random.rand(batch_size, len(class_names)) * 0.3
+        for i in range(batch_size):
+            idx = np.random.randint(0, len(class_names))
+            predictions[i, idx] = np.random.uniform(0.7, 0.95)
+        return predictions
+
 model = None
 try:
-    import tensorflow as tf
     if os.path.exists(MODEL_PATH):
-        try:
-            model = tf.keras.models.load_model(MODEL_PATH)
-        except:
-            try:
-                model = tf.keras.models.load_model(MODEL_PATH, compile=False)
-            except:
-                class DummyModel:
-                    def predict(self, X):
-                        batch_size = X.shape[0]
-                        predictions = np.random.rand(batch_size, len(class_names))
-                        for i in range(batch_size):
-                            strong_idx = np.random.randint(0, len(class_names))
-                            predictions[i] = np.random.rand(len(class_names)) * 0.3
-                            predictions[i, strong_idx] = np.random.uniform(0.7, 0.95)
-                        return predictions
-                model = DummyModel()
+        model = keras.models.load_model(MODEL_PATH, compile=False)
+        print(f"Model loaded: {MODEL_PATH}")
     else:
-        raise FileNotFoundError(f"Model file not found: {MODEL_PATH}")
-except:
-    class DummyModel:
-        def predict(self, X):
-            return np.random.rand(X.shape[0], len(class_names))
+        print(f"Model not found: {MODEL_PATH}")
+        model = DummyModel()
+except Exception as e:
+    print(f"Load error: {e}")
     model = DummyModel()
 
-from utils import detect_skin, FaceMasker, enhance_hand_roi
+if not isinstance(model, DummyModel):
+    try:
+        test = np.zeros((1, 64, 64, 3), dtype='float32')
+        pred = model.predict(test, verbose=0)
+        print(f"Real model OK | Output: {pred.shape} | Max: {np.max(pred):.3f}")
+    except Exception as e:
+        print(f"Test failed: {e}")
+        model = DummyModel()
 
+from utils import detect_skin, FaceMasker, enhance_hand_roi
 face_masker = FaceMasker()
 
 cap = None
@@ -47,10 +49,8 @@ try:
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         cap.set(cv2.CAP_PROP_FPS, 30)
         cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
-    else:
-        cap = None
 except:
-    cap = None
+    pass
 
 current_target = 'A'
 last_verdict = None
@@ -63,7 +63,7 @@ def generate_frames():
     stable_gesture = None
     stable_count = 0
     
-    if cap is None:
+    if cap is None or not cap.isOpened():
         while True:
             frame = np.zeros((360, 640, 3), dtype=np.uint8)
             cv2.putText(frame, f"Target: {current_target}", (200, 180),
@@ -73,14 +73,17 @@ def generate_frames():
             ret, buffer = cv2.imencode('.jpg', frame)
             if ret:
                 yield (b'--frame\r\n' + b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+        return
     
     while True:
         success, frame = cap.read()
         if not success:
             break
+            
         original_frame = cv2.flip(frame, 1)
         display_frame = cv2.resize(original_frame, (640, 360))
         processing_frame = original_frame.copy()
+        
         if mask_faces:
             processing_frame = face_masker.mask_faces(processing_frame)
         processing_frame = cv2.resize(processing_frame, (640, 360))
@@ -110,7 +113,7 @@ def generate_frames():
                     img_normalized = img_resized.astype('float32') / 255.0
                     img_input = np.expand_dims(img_normalized, axis=0)
 
-                    predictions = model.predict(img_input)[0]
+                    predictions = model.predict(img_input, verbose=0)[0]
                     predicted_idx = np.argmax(predictions)
                     confidence = float(predictions[predicted_idx])
                     gesture = class_names[predicted_idx] if predicted_idx < len(class_names) else 'nothing'
@@ -126,10 +129,7 @@ def generate_frames():
             stable_count = 0
 
         if stable_count >= STABLE_FRAMES_REQUIRED:
-            if gesture == current_target:
-                last_verdict = 'correct'
-            else:
-                last_verdict = 'incorrect'
+            last_verdict = 'correct' if gesture == current_target else 'incorrect'
         elif not hand_detected:
             last_verdict = None
 
@@ -137,25 +137,19 @@ def generate_frames():
                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 255, 255), 2)
 
         if last_verdict == 'correct':
-            status = "CORRECT"
-            color = (0, 255, 0)
+            status, color = "CORRECT", (0, 255, 0)
         elif last_verdict == 'incorrect':
-            status = f"Expected: {current_target}"
-            color = (0, 0, 255)
+            status, color = f"Expected: {current_target}", (0, 0, 255)
         elif hand_detected and stable_gesture:
-            status = f"Letter: {stable_gesture} ({stable_count}/{STABLE_FRAMES_REQUIRED})"
-            color = (0, 255, 255)
+            status, color = f"Letter: {stable_gesture} ({stable_count}/{STABLE_FRAMES_REQUIRED})", (0, 255, 255)
         else:
-            status = "Show a gesture"
-            color = (200, 200, 200)
+            status, color = "Show a gesture", (200, 200, 200)
 
         cv2.putText(display_frame, status, (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2)
+        
         ret, buffer = cv2.imencode('.jpg', display_frame)
-        if not ret:
-            continue
-        frame_bytes = buffer.tobytes()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+        if ret:
+            yield (b'--frame\r\n' + b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
 
 @app.route('/')
 def index():
@@ -163,8 +157,7 @@ def index():
 
 @app.route('/video_feed')
 def video_feed():
-    return Response(generate_frames(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/next_letter')
 def next_letter():
