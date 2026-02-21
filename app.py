@@ -6,7 +6,7 @@ import keras
 
 app = Flask(__name__)
 MODEL_PATH = 'asl_model.h5'
-class_names = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+class_names = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z', 'del', 'nothing', 'space']
 
 class DummyModel:
     def predict(self, X, verbose=None):
