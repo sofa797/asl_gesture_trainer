@@ -1,31 +1,28 @@
 pipeline {
-    agent any
-
-    environment {
-        venv = "${WORKSPACE}/venv"
+    agent {
+        docker { image 'python:3.11-slim' }
     }
 
     stages {
         stage('setup') {
             steps {
-                echo 'creating virtual environment and installing dependencies...'
-                sh 'python -m venv $venv'
-                sh '. $venv/bin/activate && pip install --upgrade pip'
-                sh '. $venv/bin/activate && pip install -r requirements.txt'
+                echo 'installing dependencies...'
+                sh 'python -m pip install --upgrade pip'
+                sh 'python -m pip install -r requirements.txt'
             }
         }
 
         stage('lint') {
             steps {
                 echo 'checking code style...'
-                sh '. $venv/bin/activate && flake8 . || echo "lint warnings exist"'
+                sh 'flake8 . || echo "lint warnings exist"'
             }
         }
 
         stage('test') {
             steps {
                 echo 'running tests...'
-                sh '. $venv/bin/activate && pytest tests/ --junitxml=results.xml'
+                sh 'pytest tests/ --junitxml=results.xml'
             }
             post {
                 always {
@@ -37,7 +34,7 @@ pipeline {
         stage('run app (optional)') {
             steps {
                 echo 'running the application...'
-                sh '. $venv/bin/activate && python app.py || echo "app run skipped or failed"'
+                sh 'python app.py || echo "app run skipped or failed"'
             }
         }
 
