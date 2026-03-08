@@ -40,8 +40,8 @@ pipeline {
 
         stage('run app (optional)') {
             steps {
-                echo 'running the application...'
-                sh 'python app.py || echo "app run skipped or failed"'
+                echo 'skipping app run in ci'
+                //sh 'python app.py || echo "app run skipped or failed"'
             }
         }
 
