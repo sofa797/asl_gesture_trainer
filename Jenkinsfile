@@ -12,6 +12,7 @@ pipeline {
                 echo 'installing dependencies...'
                 sh 'python -m pip install --upgrade pip'
                 sh 'python -m pip install -r requirements.txt'
+                sh 'python -m pip install flake8 pytest'
             }
         }
 
