@@ -10,9 +10,12 @@ pipeline {
         stage('setup') {
             steps {
                 echo 'installing dependencies...'
-                sh 'python -m pip install --upgrade pip'
-                sh 'python -m pip install -r requirements.txt'
-                sh 'python -m pip install flake8 pytest'
+                sh '''
+                    apt-get update && apt-get install -y libgl1 libglib2.0-0 libsm6 libxext6 libxrender1
+                    python -m pip install --upgrade pip
+                    python -m pip install -r requirements.txt
+                    python -m pip install flake8 pytest
+                '''
             }
         }
 
