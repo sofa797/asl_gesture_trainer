@@ -1,4 +1,5 @@
 import pytest
+import app as app_module
 from app import app, class_names, current_target
 
 @pytest.mark.api
@@ -60,3 +61,38 @@ def test_learning_page(client):
     assert response.status_code == 200
     for letter in class_names:
         assert letter.encode() in response.data
+
+
+@pytest.mark.api
+def test_generate_frames_with_contour(monkeypatch):
+    """gesture detection"""
+
+    import numpy as np
+
+    frame = np.zeros((480, 640, 3), dtype=np.uint8)
+    contour = np.array([[[10,10]],[[100,10]],[[100,100]],[[10,100]]])
+    class FakeCap:
+        def isOpened(self):
+            return True
+        def read(self):
+            return True, frame
+    monkeypatch.setattr(app_module, "cap", FakeCap())
+    monkeypatch.setattr(
+        app_module,
+        "detect_skin",
+        lambda img: (0.1, [contour], None)
+    )
+    monkeypatch.setattr(
+        app_module.face_masker,
+        "mask_faces",
+        lambda img: img
+    )
+    monkeypatch.setattr(
+        app_module,
+        "enhance_hand_roi",
+        lambda img: img
+    )
+    gen = app_module.generate_frames()
+    frame = next(gen)
+
+    assert b'--frame' in frame
