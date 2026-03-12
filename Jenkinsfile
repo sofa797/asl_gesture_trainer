@@ -14,7 +14,7 @@ pipeline {
                     apt-get update && apt-get install -y libgl1 libglib2.0-0 libsm6 libxext6 libxrender1
                     python -m pip install --upgrade pip
                     python -m pip install -r requirements.txt
-                    python -m pip install flake8 pytest
+                    python -m pip install flake8 pytest pytest-cov
                 '''
             }
         }
@@ -29,11 +29,12 @@ pipeline {
         stage('test') {
             steps {
                 echo 'running tests...'
-                sh 'pytest tests/ --junitxml=results.xml'
+                sh 'pytest --cov=app --cov=utils --cov-report=term --cov-report=html:coverage_html tests/ --junitxml=results.xml'
             }
             post {
                 always {
                     junit 'results.xml'
+                    archiveArtifacts artifacts: 'coverage_html/**', fingerprint: true
                 }
             }
         }
