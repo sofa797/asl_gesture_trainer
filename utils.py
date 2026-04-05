@@ -1,7 +1,10 @@
 import cv2
 import numpy as np
 import mediapipe as mp
+from profiling import timing
 
+
+@timing("detect_skin")
 def detect_skin(frame):
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     lower_skin = np.array([0, 20, 70], dtype=np.uint8)
@@ -15,6 +18,7 @@ def detect_skin(frame):
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     return skin_percentage, contours, mask
 
+
 class FaceMasker:
     def __init__(self):
         self.mp_face_detection = mp.solutions.face_detection
@@ -25,6 +29,7 @@ class FaceMasker:
         self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         self.use_haar = True
         
+    @timing("mask_faces")
     def mask_faces(self, frame):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         if self.use_haar:
@@ -57,6 +62,8 @@ class FaceMasker:
                 cv2.rectangle(frame, (x, y), (x+width, y+height), (0, 0, 0), -1)
         return frame
 
+
+@timing("enhance_hand_roi")
 def enhance_hand_roi(hand_roi):
     if hand_roi.size == 0:
         return hand_roi
