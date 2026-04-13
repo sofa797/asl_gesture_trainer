@@ -19,7 +19,13 @@ def detect_skin(frame):
 
     skin_percentage = np.sum(mask > 0) / (mask.shape[0] * mask.shape[1])
 
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours_result = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = contours_result[-2]
+
+    if contours is None:
+        contours = []
+    if not isinstance(contours, list):
+        contours = list(contours)
 
     return skin_percentage, contours, mask
 
