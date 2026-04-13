@@ -16,7 +16,6 @@ class CameraService:
                     cap.release()
                     continue
 
-                # прогрев
                 time.sleep(0.3)
                 for _ in range(10):
                     cap.read()
@@ -38,7 +37,6 @@ class CameraService:
 
         ok, frame = self.cap.read()
 
-        # 🔥 не убиваем поток
         if not ok or frame is None:
             print("frame ok:", ok)
             return False, None
