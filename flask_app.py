@@ -74,7 +74,6 @@ def generate_frames():
         gesture = "nothing"
         conf = 0.0
 
-        # ===== DETECTION =====
         if hand and contours:
             cnt = max(contours, key=cv2.contourArea)
             x, y, w, h = cv2.boundingRect(cnt)
