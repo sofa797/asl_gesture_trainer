@@ -6,50 +6,70 @@ pipeline {
         }
     }
 
+    environment {
+        PIP_DISABLE_PIP_VERSION_CHECK = '1'
+        PYTHONUNBUFFERED = '1'
+    }
+
     stages {
-        stage('setup') {
+
+        stage('install system dependencies') {
             steps {
-                echo 'installing dependencies...'
                 sh '''
-                    apt-get update && apt-get install -y libgl1 libglib2.0-0 libsm6 libxext6 libxrender1
+                    apt-get update
+                    apt-get install -y \
+                        libgl1 \
+                        libglib2.0-0 \
+                        libsm6 \
+                        libxext6 \
+                        libxrender1
+                '''
+            }
+        }
+
+        stage('install python dependencies') {
+            steps {
+                sh '''
                     python -m pip install --upgrade pip
-                    python -m pip install -r requirements.txt
-                    python -m pip install --no-cache-dir "keras>=3.0.0" --upgrade
-                    python -m pip install flake8 pytest pytest-cov
+                    pip install -r requirements.txt
+                    pip install --no-cache-dir "keras>=3.0.0" --upgrade
+                    pip install flake8 pytest pytest-cov
                 '''
             }
         }
 
         stage('lint') {
             steps {
-                echo 'checking code style...'
-                sh 'flake8 . || echo "lint warnings exist"'
+                sh '''
+                    flake8 . || true
+                '''
             }
         }
 
-        stage('test') {
+        stage('run tests') {
             steps {
-                echo 'running tests...'
-                sh 'pytest --cov=app --cov=utils --cov-report=term --cov-report=html:coverage_html tests/ --junitxml=results.xml'
-            }
-            post {
-                always {
-                    junit 'results.xml'
-                    archiveArtifacts artifacts: 'coverage_html/**', fingerprint: true
-                }
+                sh '''
+                    pytest \
+                        --cov=services \
+                        --cov=utils \
+                        --cov=flask_app \
+                        --cov-report=term-missing \
+                        --cov-report=html \
+                        --junitxml=results.xml \
+                        tests/
+                '''
             }
         }
 
-        stage('run app (optional)') {
+        stage('archive test results') {
             steps {
-                echo 'skipping app run in ci'
-                //sh 'python app.py || echo "app run skipped or failed"'
+                junit 'results.xml'
+                archiveArtifacts artifacts: 'htmlcov/**', fingerprint: true
             }
         }
 
         stage('archive artifacts') {
             steps {
-                echo 'saving model and other artifacts...'
                 archiveArtifacts artifacts: 'asl_model.h5, logs/**', fingerprint: true
             }
         }
@@ -60,10 +80,10 @@ pipeline {
             echo 'build finished'
         }
         success {
-            echo 'build completed successfully!'
+            echo 'success'
         }
         failure {
-            echo 'build failed!'
+            echo 'failed'
         }
     }
 }
