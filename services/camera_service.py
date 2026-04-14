@@ -23,12 +23,12 @@ class CameraService:
                 cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
                 cap.set(cv2.CAP_PROP_FPS, 30)
 
-                print(f"[OK] Camera opened: index={i}, backend={backend}")
+                #print(f"Camera opened: index={i}, backend={backend}")
                 return cap
 
                 cap.release()
 
-        print("[ERROR] No camera found")
+        print("No camera found")
         return None
 
     def read(self):

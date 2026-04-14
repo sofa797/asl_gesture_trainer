@@ -145,41 +145,40 @@ def generate_frames():
                    buffer.tobytes() + b"\r\n")
 
 
-@app.route("/")
+@app.route("/", methods=["GET"])
 def index():
     return render_template("index.html", target=state.current_target)
 
 
-@app.route("/learning")
+@app.route("/learning", methods=["GET"])
 def learning():
     return render_template("learning.html", letters=state.class_names)
 
 
-@app.route("/video_feed")
+@app.route("/video_feed", methods=["GET"])
 def video_feed():
     return Response(generate_frames(),
                     mimetype="multipart/x-mixed-replace; boundary=frame")
 
 
-@app.route("/next_letter")
+@app.route("/next_letter", methods=["POST"])
 def next_letter():
     state.next_letter()
     return jsonify({"target": state.current_target})
 
 
-@app.route("/retry_letter")
+@app.route("/retry_letter", methods=["POST"])
 def retry():
     state.reset()
     state.last_verdict = None
     return jsonify({"status": "reset"})
 
 
-@app.route("/toggle_mask")
+@app.route("/toggle_mask", methods=["POST"])
 def toggle_mask():
     state.mask_faces = not state.mask_faces
     return jsonify({"status": state.mask_faces})
 
 
 if __name__ == "__main__":
-    print("[START] Flask server launching...")
     app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)

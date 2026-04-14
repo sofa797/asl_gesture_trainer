@@ -242,14 +242,14 @@
         });
 
         document.getElementById('next-btn').addEventListener('click', async () => {
-            const res = await fetch('/next_letter');
+            const res = await fetch('/next_letter', {method: "POST"});
             const data = await res.json();
             currentTargetEl.textContent = data.target;
             updateGestureImage(data.target);
         });
 
         document.getElementById('retry-btn').addEventListener('click', async () => {
-            await fetch('/retry_letter');
+            await fetch('/retry_letter', {method: "POST"});
         });
     </script>
 </body>

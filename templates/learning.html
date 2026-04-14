@@ -129,5 +129,20 @@
             });
         });
     </script>
+    
+    <button id="mask-btn" onclick="toggleMask()">Mask: ON</button>
+    <script>
+    let maskEnabled = true;
+
+    function toggleMask() {
+        fetch("/toggle_mask", { method: "POST" })
+            .then(res => res.json())
+            .then(data => {
+                maskEnabled = data.status;
+                document.getElementById("mask-btn").textContent =
+                    "Mask: " + (maskEnabled ? "ON" : "OFF");
+            });
+    }
+    </script>
 </body>
 </html>
