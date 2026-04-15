@@ -50,13 +50,26 @@ pipeline {
             steps {
                 sh '''
                     pytest \
+                        tests/ \
                         --cov=services \
                         --cov=utils \
                         --cov=flask_app \
                         --cov-report=term-missing \
                         --cov-report=html \
+                        --cov-report=json \
                         --junitxml=results.xml \
-                        tests/
+                        --json-report \
+                        --json-report-file=report.json \
+                        --durations=20 \
+                        --reruns 2
+                '''
+            }
+        }
+
+        stage('analyze test results') {
+            steps {
+                sh '''
+                    python scripts/analyze_test_report.py
                 '''
             }
         }
@@ -70,7 +83,15 @@ pipeline {
 
         stage('archive artifacts') {
             steps {
-                archiveArtifacts artifacts: 'asl_model.h5, logs/**', fingerprint: true
+                archiveArtifacts artifacts: '''
+                    asl_model.h5,
+                    logs/**,
+                    htmlcov/**,
+                    results.xml,
+                    report.json,
+                    coverage.json,
+                    test_summary.json
+                ''', fingerprint: true
             }
         }
     }
