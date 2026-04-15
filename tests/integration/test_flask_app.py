@@ -17,12 +17,12 @@ def test_index(client):
 
 @pytest.mark.integration
 def test_next_letter(client):
-    res = client.get("/next_letter")
+    res = client.post("/next_letter")
     assert res.status_code == 200
     assert "target" in res.json
 
 
 @pytest.mark.integration
 def test_toggle_mask(client):
-    res = client.get("/toggle_mask")
+    res = client.post("/toggle_mask")
     assert res.status_code == 200
