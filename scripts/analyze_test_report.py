@@ -52,7 +52,7 @@ def main():
         "coverage": analyze_coverage(coverage_report)
     }
     with open("test_summary.json", "w", encoding="utf-8") as f:
-        json.dump(analysis, indent=2)
+        json.dump(analysis, f, indent=2)
 
 
 if __name__ == "__main__":
