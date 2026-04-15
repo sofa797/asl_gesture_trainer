@@ -24,7 +24,7 @@ def analyze_pytest(report: Dict[str, Any]) -> Dict[str, Any]:
     for test in tests:
         name = test.get("nodeid")
         outcome = test.get("outcome")
-        duration = test.get("duration", 0)
+        duration = test.get("call", {}).get("duration", 0)
         durations.append((name, duration))
         if outcome == "passed":
             result["passed"] += 1
