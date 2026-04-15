@@ -33,7 +33,7 @@ pipeline {
                     python -m pip install --upgrade pip
                     pip install -r requirements.txt
                     pip install --no-cache-dir "keras>=3.0.0" --upgrade
-                    pip install flake8 pytest pytest-cov
+                    pip install flake8 pytest pytest-cov pytest-json-report pytest-rerunfailures
                 '''
             }
         }
