@@ -19,3 +19,7 @@ This project uses the **[ASL Alphabet](https://www.kaggle.com/datasets/grassknot
 git clone https://github.com/sofa797/asl_gesture_trainer.git
 cd asl_gesture_trainer
 docker-compose up --build
+```
+then open in your browser
+```bash
+http://localhost:5000
